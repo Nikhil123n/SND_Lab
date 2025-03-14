@@ -2,13 +2,15 @@ version: '3.8'
 
 services:
   web:
-    build: .
-    image: python:3.10
-    container_name: WebInterfaceContainer
+    container_name: django_webinterface_container
+    image: nikhiarethiya/django-web:latest
     restart: always
     working_dir: /app
     volumes:
-      - .:/app    
+      - /mnt/root_data_storage/users/WebInterface/:/app
     ports:
       - "8000:8000"
-    command: gunicorn --bind 0.0.0.0:8000 myproject.wsgi:application
+    environment:
+      - DEBUG=0
+    command: >
+      sh -c "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 myproject.wsgi:application"
