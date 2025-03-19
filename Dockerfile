@@ -16,7 +16,7 @@ WORKDIR ${APP_DIR}
 RUN apt update && apt install -y sqlite3
 
 # Ensure required directories exist
-RUN mkdir -p ${CONFIG_DIR} ${EXPERIMENTS_DIR}
+RUN mkdir -p ${TRUENASdata_DIR} ${PERSISTENT_DIR} ${EXPERIMENTS_DIR}
 
 # Copy the requirements file
 COPY requirements.txt ${APP_DIR}/
