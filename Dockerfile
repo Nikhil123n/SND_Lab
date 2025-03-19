@@ -5,11 +5,15 @@ FROM python:3.10
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     APP_DIR=/app \
-    CONFIG_DIR=/config/data \
+    TRUENASdata_DIR=/TrueNASdata \
+    PERSISTENT_DIR=/PersistentData \
     EXPERIMENTS_DIR=/experiments
 
 # Set the working directory inside the container
 WORKDIR ${APP_DIR}
+
+# Ensure system packages are updated and install SQLite
+RUN apt update && apt install -y sqlite3
 
 # Ensure required directories exist
 RUN mkdir -p ${CONFIG_DIR} ${EXPERIMENTS_DIR}
