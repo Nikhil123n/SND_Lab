@@ -1,16 +1,36 @@
-version: '3.8'
+version: '3.8' 
 
 services:
-  web:
-    container_name: django_webinterface_container
+  django:
+    container_name: django-webinterface
+    build: .  # Uses the Dockerfile in the same directory
+
     image: nikhiarethiya/django-web:latest
     restart: always
-    working_dir: /app
-    volumes:
-      - /mnt/root_data_storage/users/WebInterface/:/app
+
     ports:
-      - "8000:8000"
+      - "9000:8000"  # Expose Django on port 9000, but runs internally on 8000
+
+    working_dir: /app
+
+
+    volumes:
+      - /mnt/root_data_storage/users/WebInterface:/app
+      - /data/freenas-v1.db:/config/data/freenas-v1.db:ro
+      - /mnt/root_data_storage/experiments:/experiments:ro
+
     environment:
-      - DEBUG=0
+      - PYTHONUNBUFFERED=1                  # Disable output buffering for easier debugging  
+      - PYTHONDONTWRITEBYTECODE=1           # Prevent Python from writing .pyc files to disk
+      - DEBUG=0                             # Set DEBUG to 0 for production
+
+      - APP_DIR=/app
+      - CONFIG_DIR=/config/data
+      - EXPERIMENTS_DIR=/experiments
+      - DATABASE_NAME=/config/data/freenas-v1.db
+      
+      - ALLOWED_HOSTS=*  # Allow access from all hosts
+      - DJANGO_SETTINGS_MODULE=myproject.settings  # Set Django settings module
+
     command: >
-      sh -c "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 myproject.wsgi:application"
+      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
