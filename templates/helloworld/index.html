@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Index Page</title>
+
+    <!-- Required meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">        
+
+    {% load static %}
+    
+
+</head>
+
+<body>
+    {% include 'helloworld/header.html' %}
+    {% with archi_image_path='transparent_architecture.png' archi_image_alt='Neurosort Pipeline Architecture'%}
+
+
+    <div class="container text-center mt-4" style="height: calc(100vh - 80px); display: flex; align-items: center; justify-content: center;">
+        <!-- Image with click-to-zoom functionality -->
+        <img src="{% static archi_image_path %}" alt="{{archi_image_alt}}" class="img-fluid" style="max-height: 100%; max-width: 100%; object-fit: contain; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#imageModal">
+    </div>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <img src="{% static archi_image_path %}" alt="{{archi_image_alt}}" class="img-fluid">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>    
+
+    <!-- Architetcur heading  -->
+    <h1 class="text-center mt-4">{{ archi_image_alt }}</h1>
+    
+    {% endwith %}
+</body>
+</html>

@@ -3,14 +3,7 @@ from django.http import HttpResponse
 
 # Create your views here.
 def index(request):
-    return HttpResponse("""
-        <html>
-            <body>
-                <h1>Hello, world. You're at the index page of Spike's Sorter.</h1>
-                <a href="/login/">Login</a>
-            </body>
-        </html>
-    """)
+    return render(request, "helloworld/index.html")
 
 
 from django.shortcuts import render, redirect
@@ -29,8 +22,14 @@ def login_view(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
         
+        # Check if username and password are provided
+        if not username or not password:
+            messages.error(request, "Both username and password are required.")
+            return render(request, "helloworld/login.html")
+        
         user = authenticate(request, username=username, password=password)
         
+        # Check if the user is active
         if user is not None:
             login(request, user)
             return redirect("dashboard")  # Redirect to the next page after login
