@@ -1,12 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
 # Create your views here.
 def index(request):
     return render(request, "helloworld/index.html")
 
-
-from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -46,3 +44,27 @@ def logout_view(request):
     logout(request)
     messages.success(request, "You have been logged out successfully.")
     return redirect('login')
+
+# This view handles the submission of a pipeline job.
+# It generates a unique job ID, prepares the pipeline data, and submits it to a Celery task.
+from .tasks import submit_pipeline_job
+import uuid
+@login_required
+def dashboard_view(request):
+    if request.method == "POST":
+        job_id = str(uuid.uuid4())[:8]
+        pipeline_data = {
+            "job_id": job_id,
+            "job_steps": ["pre", "sort", "post", "export"],
+            "parameters": {
+                "filter_type": "bandpass",
+                "sorting_algorithm": "Kilosort",
+                "threshold": 5.0
+            }
+        }
+
+        submit_pipeline_job.delay(job_id, pipeline_data)
+        messages.success(request, f"Job {job_id} submitted!")
+        return redirect("dashboard")
+
+    return render(request, "helloworld/dashboard.html")

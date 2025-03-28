@@ -6,8 +6,24 @@
     <title>Dashboard</title>
 </head>
 <body>
-    <h2>Welcome, {{ user.username }}</h2>
-    <p>You are successfully logged in.</p>
-    <a href="{% url 'logout' %}">Logout</a>
+    {% extends "helloworld/header.html" %}
+    
+    {% block content %}
+    <div>
+        <h2>Welcome, {{ user.username }}</h2>
+        <p>You are successfully logged in.</p>
+        <a href="{% url 'logout' %}">Logout</a>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">Submit New Pipeline Job</h5>
+            <form method="post">
+                {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Submit Job</button>
+            </form>
+        </div>
+    </div>
+    {% endblock %}
 </body>
 </html>

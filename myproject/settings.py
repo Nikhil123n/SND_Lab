@@ -34,6 +34,7 @@ LOGIN_URL = '/helloworld/login/'
 # Application definition
 
 INSTALLED_APPS = [
+    'helloworld',  # Your custom app, added because celery tasks are in it
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -142,6 +143,18 @@ MESSAGE_TAGS = {
         messages.ERROR: 'alert-danger',
 }
 
-# settings.py
+# settings for session management
 # SESSION_COOKIE_AGE = 10  # 10 seconds for quick test
 # SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+
+# Celery settings to connect to Redis
+CELERY_BROKER_URL = 'redis://:password@128.164.34.133:30036/0'
+CELERY_RESULT_BACKEND = 'redis://:password@128.164.34.133:30036/0'
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+# Path to the jobs directory
+JOBS_DIR = os.path.join(BASE_DIR, 'PersistentData', 'jobs')
+

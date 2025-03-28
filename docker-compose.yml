@@ -1,4 +1,4 @@
-version: '3.8' 
+version: '3.8'
 
 services:
   django:
@@ -11,12 +11,11 @@ services:
     ports:
       - "9000:8000"  # Expose Django on port 9000, but runs internally on 8000
 
-    working_dir: /app
-
+    working_dir: /  # Set the working directory to the root
 
     volumes:
-      - /mnt/root_data_storage/users/WebInterface:/app
-      - /data/freenas-v1.db:/config/data/freenas-v1.db:ro
+      - /mnt/root_data_storage/users/WebInterface:/  # Mount the project directly to the root
+      - /mnt/root_data_storage/users/WebInterface/TrueNASdata:/TrurNASdata:ro
       - /mnt/root_data_storage/experiments:/experiments:ro
 
     environment:
@@ -24,7 +23,7 @@ services:
       - PYTHONDONTWRITEBYTECODE=1           # Prevent Python from writing .pyc files to disk
       - DEBUG=0                             # Set DEBUG to 0 for production
 
-      - APP_DIR=/app
+      - APP_DIR=/
       - CONFIG_DIR=/config/data
       - EXPERIMENTS_DIR=/experiments
       - DATABASE_NAME=/config/data/freenas-v1.db
