@@ -1,13 +1,23 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-
-# Create your views here.
-def index(request):
-    return render(request, "helloworld/index.html")
-
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.db.models import Prefetch
+from .models import Job, JobStep, JobStatus
+import uuid
+
+# DRF imports
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+
+from .serializers import JobSerializer, JobStatusSerializer
+
+def index(request):
+    return render(request, "helloworld/index.html")
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -36,24 +46,17 @@ def login_view(request):
     
     return render(request, "helloworld/login.html")
 
-@login_required
-def dashboard_view(request):
-    return render(request, "helloworld/dashboard.html")
-
 def logout_view(request):
     logout(request)
     messages.success(request, "You have been logged out successfully.")
     return redirect('login')
 
-# This view handles the submission of a pipeline job.
-# It generates a unique job ID, prepares the pipeline data, and submits it to a Celery task.
-from .tasks import submit_pipeline_job
-import uuid
 @login_required
 def dashboard_view(request):
     if request.method == "POST":
         job_id = str(uuid.uuid4())[:8]
-        pipeline_data = {
+
+        pipeline = {
             "job_id": job_id,
             "job_steps": ["pre", "sort", "post", "export"],
             "parameters": {
@@ -63,8 +66,58 @@ def dashboard_view(request):
             }
         }
 
-        submit_pipeline_job.delay(job_id, pipeline_data)
+        job = Job.objects.create(
+            job_id=job_id,
+            submitted_by=request.user,
+            description="Auto-submitted from dashboard",
+            pipeline_json=pipeline
+        )
+
+        for step in pipeline["job_steps"]:
+            step_obj = JobStep.objects.create(job=job, step_name=step)
+            JobStatus.objects.update_or_create(
+                step=step_obj,
+                defaults={"status": "pending", "message": "Queued for processing."}
+            )
+
         messages.success(request, f"Job {job_id} submitted!")
         return redirect("dashboard")
 
     return render(request, "helloworld/dashboard.html")
+
+@login_required
+def job_history_view(request):
+    jobs = Job.objects.filter(submitted_by=request.user).prefetch_related(
+        Prefetch('steps', queryset=JobStep.objects.select_related('status'))
+    ).order_by('-created_at')
+
+    context = {'jobs': jobs}
+    return render(request, "helloworld/job_history.html", context)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_next_job(request):
+    job = Job.objects.filter(steps__status__status="pending").first()
+    if not job:
+        return Response(status=204)
+    return Response(job.pipeline_json)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def submit_job_status(request):
+    job_id = request.data.get("job_id")
+    step_name = request.data.get("step_name")
+    status_val = request.data.get("status")
+    message = request.data.get("message", "")
+
+    try:
+        job = Job.objects.get(job_id=job_id)
+        step = JobStep.objects.get(job=job, step_name=step_name)
+        JobStatus.objects.update_or_create(
+            step=step,
+            defaults={"status": status_val, "message": message}
+        )
+        return Response({"message": "Status updated."}, status=201)
+    except (Job.DoesNotExist, JobStep.DoesNotExist):
+        return Response({"error": "Invalid job_id or step_name."}, status=400)
