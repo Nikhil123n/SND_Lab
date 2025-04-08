@@ -18,12 +18,21 @@
     <div class="card mt-3">
         <div class="card-body">
             <h5 class="card-title">Submit New Pipeline Job</h5>
-            <form method="post">
+            <form method="POST">
                 {% csrf_token %}
-            <button type="submit" class="btn btn-primary">Submit Job</button>
+                <button type="submit" class="btn btn-primary">Submit Pipeline Job</button>
             </form>
         </div>
     </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">Pipeline Job Status</h5>
+            <p>Check the status of your submitted jobs.</p>
+        </div>
+    </div>
+    <a href="{% url 'job-history' %}" class="btn btn-secondary">View Job History</a>
+
     {% endblock %}
 </body>
 </html>

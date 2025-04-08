@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-r(1u-tyb!*_6tup#b)i%v0cj&g%x_p+@igw%(&0ro9d@^0pj9-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]  # Adjust for production
 
@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',  # Django REST Framework
+    'rest_framework.authtoken',  # Token authentication for DRF
 ]
 
 MIDDLEWARE = [
@@ -144,17 +146,24 @@ MESSAGE_TAGS = {
 }
 
 # settings for session management
-# SESSION_COOKIE_AGE = 10  # 10 seconds for quick test
+# SESSION_COOKIE_AGE = 1000  # 10 seconds for quick test
 # SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
-
-# Celery settings to connect to Redis
-CELERY_BROKER_URL = 'redis://:password@128.164.34.133:30036/0'
-CELERY_RESULT_BACKEND = 'redis://:password@128.164.34.133:30036/0'
-CELERY_TASK_ALWAYS_EAGER = False
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
 
 # Path to the jobs directory
 JOBS_DIR = os.path.join(BASE_DIR, 'PersistentData', 'jobs')
+
+
+# We add REST_FRAMEWORK settings to enable token authentication for our API.
+# This will allow us to use token-based authentication for our API endpoints. 
+# This is particularly useful for securing access to the API, especially when integrating with other systems or services.
+# Ensure you have 'rest_framework.authtoken' & 'rest_framework'in your INSTALLED_APPS
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    # 
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 

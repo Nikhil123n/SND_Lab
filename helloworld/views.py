@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Prefetch
-from .models import Job, JobStep, JobStatus
+from .models import Job
 import uuid
 
 # DRF imports
@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import JobSerializer, JobStatusSerializer
+from .serializers import JobSerializer
 
 def index(request):
     return render(request, "helloworld/index.html")
@@ -54,10 +54,17 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     if request.method == "POST":
-        job_id = str(uuid.uuid4())[:8]
+        # Temporarily create job with empty pipeline
+        job = Job.objects.create(
+            submitted_by=request.user.username,
+            step_ids=[1, 2, 3, 4],  # Replace with dynamic IDs if needed
+            pipeline_json={},  # placeholder
+            status=-2
+        )
 
+        # Now construct pipeline with job.id
         pipeline = {
-            "job_id": job_id,
+            "job_id": job.id,
             "job_steps": ["pre", "sort", "post", "export"],
             "parameters": {
                 "filter_type": "bandpass",
@@ -66,30 +73,21 @@ def dashboard_view(request):
             }
         }
 
-        job = Job.objects.create(
-            job_id=job_id,
-            submitted_by=request.user,
-            description="Auto-submitted from dashboard",
-            pipeline_json=pipeline
-        )
+        # Update pipeline_json
+        job.pipeline_json = pipeline
+        job.save()
 
-        for step in pipeline["job_steps"]:
-            step_obj = JobStep.objects.create(job=job, step_name=step)
-            JobStatus.objects.update_or_create(
-                step=step_obj,
-                defaults={"status": "pending", "message": "Queued for processing."}
-            )
-
-        messages.success(request, f"Job {job_id} submitted!")
+        messages.success(request, f"Job {job.id} submitted!")
         return redirect("dashboard")
 
     return render(request, "helloworld/dashboard.html")
 
 @login_required
 def job_history_view(request):
-    jobs = Job.objects.filter(submitted_by=request.user).prefetch_related(
-        Prefetch('steps', queryset=JobStep.objects.select_related('status'))
-    ).order_by('-created_at')
+    if request.user.username == "admin":  # Check if the logged-in user is the admin
+        jobs = Job.objects.all().order_by('-created_at')  # Fetch all jobs for admin
+    else:
+        jobs = Job.objects.filter(submitted_by=request.user.username).order_by('-created_at')  # Fetch jobs for the user
 
     context = {'jobs': jobs}
     return render(request, "helloworld/job_history.html", context)
@@ -98,26 +96,25 @@ def job_history_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_next_job(request):
-    job = Job.objects.filter(steps__status__status="pending").first()
+    job = Job.objects.filter(status=-2).order_by('created_at').first()  # Queued only
     if not job:
         return Response(status=204)
+    
+    # Mark as fetched
+    job.status = -1
+    job.save()
+
     return Response(job.pipeline_json)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def submit_job_status(request):
     job_id = request.data.get("job_id")
-    step_name = request.data.get("step_name")
     status_val = request.data.get("status")
-    message = request.data.get("message", "")
-
     try:
-        job = Job.objects.get(job_id=job_id)
-        step = JobStep.objects.get(job=job, step_name=step_name)
-        JobStatus.objects.update_or_create(
-            step=step,
-            defaults={"status": status_val, "message": message}
-        )
-        return Response({"message": "Status updated."}, status=201)
-    except (Job.DoesNotExist, JobStep.DoesNotExist):
-        return Response({"error": "Invalid job_id or step_name."}, status=400)
+        job = Job.objects.get(id=job_id)
+        job.status = status_val
+        job.save()
+        return Response({"message": f"Updated job {job_id} to status {status_val}"}, status=201)
+    except Job.DoesNotExist:
+        return Response({"error": "Invalid job ID"}, status=400)

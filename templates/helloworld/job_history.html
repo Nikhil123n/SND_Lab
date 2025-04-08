@@ -1,0 +1,42 @@
+{% extends "helloworld/header.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-4">Job History</h3>
+
+    {% for job in jobs %}
+        <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+            <strong>Job ID:</strong> {{ job.id }} |             
+            <strong>Created:</strong> {{ job.created_at|date:"F j, Y, g:i a" }} | 
+            <strong>Status:</strong> {{ job.get_status_display }}
+        </div>
+        <!-- <div class="card-body">
+            <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                <th>Step</th>
+                <th>Status</th>
+                <th>Message</th>
+                <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for step in job.steps.all %}
+                    <tr>
+                        <td>{{ step.step_name }}</td>
+                        <td>{{ step.get_status_display }}</td>
+                        <td>{{ step.message|default:"—" }}</td>
+                        <td>{{ step.created_at }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            
+            </table>
+        </div> -->
+        </div>
+    {% empty %}
+        <p>You haven't submitted any jobs yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}
