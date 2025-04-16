@@ -11,11 +11,11 @@ services:
     ports:
       - "9000:8000"  # Expose Django on port 9000, but runs internally on 8000
 
-    working_dir: /  # Set the working directory to the root
+   # working_dir: /mnt/root_data_storage/users/WebInterface  # Set the working directory to the root
 
     volumes:
-      - /mnt/root_data_storage/users/WebInterface:/  # Mount the project directly to the root
-      - /mnt/root_data_storage/users/WebInterface/TrueNASdata:/TrurNASdata:ro
+      - /mnt/root_data_storage/users/WebInterface/TrueNASdata:/TrurNASdata:ro       #on TrueNAS /data diretory bind to /mnt/root_data_storage/users/WebInterface/TrueNASdata allo 
+      - /mnt/root_data_storage/users/WebInterface/PersistentData:/PersistentData:rw     # Persistent data storage for web interface
       - /mnt/root_data_storage/experiments:/experiments:ro
 
     environment:

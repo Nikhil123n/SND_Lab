@@ -1,0 +1,39 @@
+{% extends "helloworld/job_wizard/generic.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Step 6: Review & Submit</h4>
+      <form method="post">
+        {% csrf_token %}
+        {{ wizard.management_form }}
+
+        <fieldset class="border p-3 mb-3">
+          <legend class="w-auto">Review Your Configuration</legend>
+
+          <ul class="list-group">
+            {% for key, value in wizard.get_all_cleaned_data.items %}
+              <li class="list-group-item">
+                <strong>{{ key|title }}:</strong>
+                {{ value|join:", " }}
+              </li>
+            {% endfor %}
+          </ul>          
+        </fieldset>
+
+        <div class="form-check mt-3">
+          {{ form.confirm }}
+          <label class="form-check-label" for="id_confirm">I confirm this configuration is correct.</label>
+        </div>
+
+        <div class="mt-4">
+          {% if wizard.steps.prev %}
+            <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}" class="btn btn-secondary">Back</button>
+          {% endif %}
+          <button type="submit" class="btn btn-success">Submit Job</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

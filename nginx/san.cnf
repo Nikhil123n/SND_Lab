@@ -1,0 +1,20 @@
+[req]
+default_bits       = 2048
+prompt             = no
+default_md         = sha256
+req_extensions     = req_ext
+distinguished_name = dn
+
+[dn]
+C = US
+ST = District of Columbia
+L = Washington
+O = George Washington University
+CN = 128.164.34.133
+
+[req_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+IP.1 = 128.164.34.133
+DNS.1 = localhost

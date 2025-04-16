@@ -14,6 +14,16 @@ WORKDIR /
 # Ensure system packages are updated and install SQLite and Supervisor
 RUN apt update && apt install -y sqlite3 supervisor
 
+# Install Nginx
+RUN apt install -y nginx
+
+# Copy Nginx config and certs
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/certs/ /etc/nginx/certs/
+
+# Expose HTTPS port
+EXPOSE 443
+
 # Ensure required directories exist
 RUN mkdir -p ${TRUENASdata_DIR} ${PERSISTENT_DIR} ${EXPERIMENTS_DIR}
 
@@ -29,9 +39,6 @@ COPY . .
 
 # Copy the Supervisor configuration file
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Expose the port
-EXPOSE 8000
 
 # Start Supervisor to manage both processes
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

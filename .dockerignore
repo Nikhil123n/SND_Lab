@@ -9,3 +9,5 @@ db.sqlite3
 TrueNASdata/
 PersistentData/
 experiments/
+truespike-worker/
+freenas-v1.db

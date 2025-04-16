@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',  # Django REST Framework
     'rest_framework.authtoken',  # Token authentication for DRF
+    'formtools', # For the form wizard
 ]
 
 MIDDLEWARE = [

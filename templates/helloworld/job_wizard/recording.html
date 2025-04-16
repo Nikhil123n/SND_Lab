@@ -1,0 +1,123 @@
+{% extends "helloworld/job_wizard/generic.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Step 1: Recording Input</h4>
+      <form method="post">
+        {% csrf_token %}
+        {{ wizard.management_form }}
+
+        <fieldset class="border p-3 mb-3">
+          <legend class="w-auto">Recording Input</legend>
+
+          <div class="form-group mb-2">
+            <label for="{{ form.binfile.id_for_label }}">{{ form.binfile.label }}</label>
+            {{ form.binfile }}
+          </div>
+
+          <div class="form-group mb-2">
+            <label for="{{ form.probe.id_for_label }}">{{ form.probe.label }}</label>
+            {{ form.probe }}
+          </div>
+
+          <div class="form-group mb-2">
+            <label for="{{ form.sampling_rate.id_for_label }}">{{ form.sampling_rate.label }}</label>
+            {{ form.sampling_rate }}
+          </div>
+
+          <div class="form-group mb-2">
+            <label for="{{ form.num_channels.id_for_label }}">{{ form.num_channels.label }}</label>
+            {{ form.num_channels }}
+          </div>
+
+          <div class="form-group mb-2">
+            <label for="{{ form.remove.id_for_label }}">{{ form.remove.label }}</label>
+            {{ form.remove }}
+          </div>
+
+          <div class="form-group mb-2">
+            <label for="bad_channels">Bad Channels:</label>
+            <div id="bad-channels-checkboxes" class="d-flex flex-wrap gap-2"></div>
+            <!-- Hidden field to store selected bad channels -->
+            {{ form.bad_channels_hidden }}
+            <p><strong>Selected:</strong> <span id="debug-bad-channels"></span></p>
+
+          </div>                  
+
+          <div class="form-group mb-2">
+            <label for="{{ form.gain_to_uV.id_for_label }}">{{ form.gain_to_uV.label }}</label>
+            {{ form.gain_to_uV }}
+          </div>
+
+          <div class="form-group mb-2">
+            <label for="{{ form.offset_to_uV.id_for_label }}">{{ form.offset_to_uV.label }}</label>
+            {{ form.offset_to_uV }}
+          </div>
+        </fieldset>
+
+        <div class="mt-3">
+          <button type="submit" class="btn btn-primary">Next</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const numChannelsInput = document.getElementById("id_num_channels");
+    const checkboxContainer = document.getElementById("bad-channels-checkboxes");
+    const hiddenField = document.getElementById("bad_channels_hidden");
+
+    function updateHiddenField() {
+      const checked = Array.from(document.querySelectorAll('input[name="bad_channels[]"]:checked'))
+        .map(cb => cb.value);
+      hiddenField.value = checked.join(",");
+      const debugSpan = document.getElementById("debug-bad-channels");
+      if (debugSpan) debugSpan.textContent = hiddenField.value;
+    }
+
+
+    // ⛳ Call updateHiddenField anytime checkboxes are toggled
+    checkboxContainer.addEventListener("change", updateHiddenField);
+
+    // ✅ Also update before form submits (always safe)
+    const form = document.querySelector("form");
+    form.addEventListener("submit", function (e) {
+      updateHiddenField();
+    });
+
+    // Rebuild checkboxes on num_channels input
+    numChannelsInput.addEventListener("input", function () {
+      const count = parseInt(this.value);
+      checkboxContainer.innerHTML = "";
+
+      if (!isNaN(count) && count > 0 && count <= 1024) {
+        for (let i = 0; i < count; i++) {
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.name = "bad_channels[]";
+          checkbox.value = i;
+          checkbox.id = `bad_channel_${i}`;
+          checkbox.classList.add("form-check-input", "me-1");
+
+          const label = document.createElement("label");
+          label.setAttribute("for", `bad_channel_${i}`);
+          label.classList.add("form-check-label", "me-2");
+          label.innerText = i;
+
+          const wrapper = document.createElement("div");
+          wrapper.classList.add("form-check", "form-check-inline", "mb-1");
+          wrapper.appendChild(checkbox);
+          wrapper.appendChild(label);
+
+          checkboxContainer.appendChild(wrapper);
+        }
+        updateHiddenField(); // 💡 Also prefill if some already checked (edge case)
+      }
+    });
+  });
+</script>
+
+
+{% endblock %}
